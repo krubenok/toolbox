@@ -67,12 +67,14 @@ Authentication is handled automatically in the following order:
 
 [TOON](https://github.com/toon-format/toon) is a token-optimized notation format designed for LLM workflows. It's more compact than JSON while remaining human-readable.
 
+By default, empty or null fields are omitted from TOON output to minimize token usage.
+
 ```
 [3]:
-  - FilePath: /src/main.go
-    LineStart: 42
-    Status: active
-    Comments[1]{Author,Published,Type,Content}:
+  - filePath: /src/main.go
+    lineStart: 42
+    status: active
+    comments[1]{author,published,type,content}:
       "John Doe","2025-01-15T10:30:00Z",text,"Please add error handling here"
 ```
 
@@ -101,6 +103,63 @@ Use `--json` for standard JSON output:
 ## Configuration
 
 Configuration is stored in `~/.toolbox/ado-pr-comments.json`.
+
+### Output Field Control
+
+You can control which fields are included in the TOON output. Each field can be set to one of three modes:
+
+| Mode       | Description                                    |
+| ---------- | ---------------------------------------------- |
+| `always`   | Always include the field, even if empty/null   |
+| `notEmpty` | Only include if the field has a value (default)|
+| `never`    | Never include the field                        |
+
+#### Configuration Structure
+
+```json
+{
+  "output": {
+    "filePath": "notEmpty",
+    "lineStart": "notEmpty",
+    "lineEnd": "notEmpty",
+    "status": "notEmpty",
+    "author": "notEmpty",
+    "published": "notEmpty",
+    "updated": "notEmpty",
+    "type": "notEmpty",
+    "content": "notEmpty"
+  }
+}
+```
+
+#### Available Fields
+
+**Thread fields:**
+- `filePath` - Path to the file
+- `lineStart` - Starting line number
+- `lineEnd` - Ending line number
+- `status` - Thread status (active, closed, etc.)
+
+**Comment fields:**
+- `author` - Comment author name
+- `published` - Publication timestamp
+- `updated` - Last update timestamp
+- `type` - Comment type (text, system, etc.)
+- `content` - Comment content
+
+#### Example: Minimal Output
+
+To get the most compact output, you might hide timestamps and type:
+
+```json
+{
+  "output": {
+    "published": "never",
+    "updated": "never",
+    "type": "never"
+  }
+}
+```
 
 ### Content Filtering
 
@@ -142,11 +201,11 @@ This example filters a `reviewbot` boilerplate example:
   "filter": {
     "cutPatterns": [
       "(?i)Rate this:",
-      "(?i)AI-generated content may be incorrect",
+      "(?i)AI-generated content may be incorrect"
     ],
     "scrubPatterns": [
       "(?i)\\bUseful\\b",
-      "(?i)\\bNot useful\\b",
+      "(?i)\\bNot useful\\b"
     ],
     "authorPatterns": [
       "(?i)^reviewbot$"

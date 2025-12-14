@@ -79,6 +79,81 @@ func SimplifyThreads(threads []Thread, filter *CompiledFilter) []SimplifiedThrea
 	return result
 }
 
+// ThreadToMap converts a SimplifiedThread to a map based on output config.
+// This allows dynamic field inclusion for TOON output.
+func ThreadToMap(t SimplifiedThread, cfg *OutputConfig) map[string]any {
+	m := make(map[string]any)
+
+	if shouldInclude(cfg, "filePath", t.FilePath != "") {
+		m["filePath"] = t.FilePath
+	}
+	if shouldInclude(cfg, "lineStart", t.LineStart != nil) {
+		m["lineStart"] = t.LineStart
+	}
+	if shouldInclude(cfg, "lineEnd", t.LineEnd != nil) {
+		m["lineEnd"] = t.LineEnd
+	}
+	if shouldInclude(cfg, "status", t.Status != "") {
+		m["status"] = t.Status
+	}
+
+	// Always include comments array, but filter comment fields
+	comments := make([]map[string]any, 0, len(t.Comments))
+	for _, c := range t.Comments {
+		comments = append(comments, CommentToMap(c, cfg))
+	}
+	m["comments"] = comments
+
+	return m
+}
+
+// CommentToMap converts a SimplifiedComment to a map based on output config.
+func CommentToMap(c SimplifiedComment, cfg *OutputConfig) map[string]any {
+	m := make(map[string]any)
+
+	if shouldInclude(cfg, "author", c.Author != "") {
+		m["author"] = c.Author
+	}
+	if shouldInclude(cfg, "published", c.Published != "") {
+		m["published"] = c.Published
+	}
+	if shouldInclude(cfg, "updated", c.Updated != "") {
+		m["updated"] = c.Updated
+	}
+	if shouldInclude(cfg, "type", c.Type != "") {
+		m["type"] = c.Type
+	}
+	if shouldInclude(cfg, "content", c.Content != "") {
+		m["content"] = c.Content
+	}
+
+	return m
+}
+
+// ThreadsToMaps converts a slice of threads to maps for TOON output.
+func ThreadsToMaps(threads []SimplifiedThread, cfg *OutputConfig) []map[string]any {
+	result := make([]map[string]any, 0, len(threads))
+	for _, t := range threads {
+		result = append(result, ThreadToMap(t, cfg))
+	}
+	return result
+}
+
+// shouldInclude determines if a field should be included based on config and value.
+func shouldInclude(cfg *OutputConfig, field string, hasValue bool) bool {
+	mode := cfg.GetFieldMode(field)
+	switch mode {
+	case FieldModeAlways:
+		return true
+	case FieldModeNever:
+		return false
+	case FieldModeNotEmpty:
+		fallthrough
+	default:
+		return hasValue
+	}
+}
+
 // FilterActiveThreads returns only threads with status "active".
 func FilterActiveThreads(threads []Thread) []Thread {
 	var active []Thread
@@ -109,7 +184,6 @@ func htmlToMarkdownish(input string) string {
 	result := input
 
 	// Convert block elements to newlines
-	// TODO: implement a more sophisticated HTML to Markdown conversion
 	result = regexp.MustCompile(`(?i)<\s*br\s*/?\s*>`).ReplaceAllString(result, "\n")
 	result = regexp.MustCompile(`(?i)</\s*p\s*>`).ReplaceAllString(result, "\n")
 	result = regexp.MustCompile(`(?i)</\s*div\s*>`).ReplaceAllString(result, "\n")

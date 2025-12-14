@@ -41,17 +41,21 @@ func Run(opts Options) (*Result, error) {
 		opts.DebugLog("Auth: " + azAuth.Scheme)
 	}
 
-	// Load and compile filter (unless disabled)
+	// Load config
+	cfg, err := LoadConfig()
+	if err != nil {
+		if opts.Debug && opts.DebugLog != nil {
+			opts.DebugLog("Warning: failed to load config: " + err.Error())
+		}
+		cfg = &Config{
+			Filter: DefaultFilterConfig(),
+			Output: DefaultOutputConfig(),
+		}
+	}
+
+	// Compile filter (unless disabled)
 	var filter *CompiledFilter
 	if !opts.NoFilter {
-		cfg, err := LoadConfig()
-		if err != nil {
-			if opts.Debug && opts.DebugLog != nil {
-				opts.DebugLog("Warning: failed to load config: " + err.Error())
-			}
-			cfg = &Config{Filter: DefaultFilterConfig()}
-		}
-
 		filter, err = cfg.Filter.Compile()
 		if err != nil {
 			if opts.Debug && opts.DebugLog != nil {
@@ -78,13 +82,16 @@ func Run(opts Options) (*Result, error) {
 	// Serialize output
 	var output string
 	if opts.OutputJSON {
+		// JSON output uses structs with omitempty tags
 		jsonBytes, err := json.MarshalIndent(simplified, "", "  ")
 		if err != nil {
 			return nil, err
 		}
 		output = string(jsonBytes)
 	} else {
-		toonStr, err := toon.MarshalString(simplified)
+		// TOON output uses maps with configurable field inclusion
+		maps := ThreadsToMaps(simplified, cfg.Output)
+		toonStr, err := toon.MarshalString(maps)
 		if err != nil {
 			// Fall back to JSON if toon fails
 			if opts.Debug && opts.DebugLog != nil {

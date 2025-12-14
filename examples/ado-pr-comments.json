@@ -1,0 +1,35 @@
+{
+  "filter": {
+    "cutPatterns": [
+      "(?i)Rate this:",
+      "(?i)AI-generated content may be incorrect",
+      "(?i)PR assistant",
+      "(?i)Skills marketplace"
+    ],
+    "scrubPatterns": [
+      "(?i)\\bUseful\\b",
+      "(?i)\\bNot useful\\b",
+      "(?i)Questions:\\s*PRAssistant Support",
+      "(?i)aka\\.ms/prassistant",
+      "(?i)prassistantcopilot",
+      "(?i)pullrequestcopilot",
+      "(?i)Skills marketplace",
+      "(?i)Example skills",
+      "(?i)See all skills"
+    ],
+    "authorPatterns": [
+      "(?i)^merlinbot$"
+    ]
+  },
+  "output": {
+    "filePath": "notEmpty",
+    "lineStart": "notEmpty",
+    "lineEnd": "notEmpty",
+    "status": "notEmpty",
+    "author": "notEmpty",
+    "published": "notEmpty",
+    "updated": "notEmpty",
+    "type": "notEmpty",
+    "content": "notEmpty"
+  }
+}
