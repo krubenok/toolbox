@@ -10,12 +10,12 @@ toolbox ado-pr-comments <PR_URL> [flags]
 
 ### Flags
 
-| Flag          | Description                             |
-| ------------- | --------------------------------------- |
-| `--active`    | Only return active (unresolved) threads |
-| `--json`      | Output JSON instead of TOON format      |
-| `--no-filter` | Disable content filtering               |
-| `--debug`     | Print debug info to stderr              |
+| Flag          | Description                                                                 |
+| ------------- | --------------------------------------------------------------------------- |
+| `--status`    | Filter by thread status (comma-separated or repeated, e.g., `--status active,fixed`) |
+| `--json`      | Output JSON instead of TOON format                                          |
+| `--no-filter` | Disable content filtering                                                   |
+| `--debug`     | Print debug info to stderr                                                  |
 
 ### Examples
 
@@ -24,7 +24,10 @@ toolbox ado-pr-comments <PR_URL> [flags]
 toolbox ado-pr-comments https://dev.azure.com/org/project/_git/repo/pullrequest/123
 
 # Fetch only active/unresolved threads
-toolbox ado-pr-comments https://dev.azure.com/org/project/_git/repo/pullrequest/123 --active
+toolbox ado-pr-comments https://dev.azure.com/org/project/_git/repo/pullrequest/123 --status active
+
+# Fetch active and pending threads
+toolbox ado-pr-comments https://dev.azure.com/org/project/_git/repo/pullrequest/123 --status active,pending
 
 # Output as JSON instead of TOON
 toolbox ado-pr-comments https://dev.azure.com/org/project/_git/repo/pullrequest/123 --json
@@ -103,6 +106,66 @@ Use `--json` for standard JSON output:
 ## Configuration
 
 Configuration is stored in `~/.toolbox/ado-pr-comments.json`.
+
+### Status Filtering
+
+You can configure default status filtering to only include specific thread statuses. This is useful if you typically only care about active (unresolved) threads.
+
+#### Configuration Structure
+
+```json
+{
+  "status": {
+    "include": ["active"]
+  }
+}
+```
+
+#### Available Statuses
+
+| Status      | Description                     |
+| ----------- | ------------------------------- |
+| `active`    | Unresolved/open threads         |
+| `fixed`     | Resolved as fixed               |
+| `closed`    | Closed threads                  |
+| `byDesign`  | Resolved as by design           |
+| `pending`   | Pending resolution              |
+| `wontFix`   | Resolved as won't fix           |
+
+#### Behavior
+
+- **Empty `include` array** (default): All statuses are included
+- **Non-empty `include` array**: Only threads with matching statuses are included
+- **`--status` flag**: Overrides config for that invocation
+
+#### Examples
+
+Include only active threads by default:
+
+```json
+{
+  "status": {
+    "include": ["active"]
+  }
+}
+```
+
+Include active and pending threads:
+
+```json
+{
+  "status": {
+    "include": ["active", "pending"]
+  }
+}
+```
+
+Override config with CLI flag:
+
+```bash
+# Config says "active" only, but fetch all statuses for this run
+toolbox ado-pr-comments <PR_URL> --status active,fixed,closed,byDesign,pending,wontFix
+```
 
 ### Output Field Control
 

@@ -154,15 +154,26 @@ func shouldInclude(cfg *OutputConfig, field string, hasValue bool) bool {
 	}
 }
 
-// FilterActiveThreads returns only threads with status "active".
-func FilterActiveThreads(threads []Thread) []Thread {
-	var active []Thread
+// FilterThreadsByStatus returns threads matching any of the given statuses.
+// If statuses is empty, all threads are returned.
+func FilterThreadsByStatus(threads []Thread, statuses []string) []Thread {
+	if len(statuses) == 0 {
+		return threads
+	}
+
+	// Build a set for O(1) lookup
+	statusSet := make(map[string]bool, len(statuses))
+	for _, s := range statuses {
+		statusSet[s] = true
+	}
+
+	var filtered []Thread
 	for _, t := range threads {
-		if t.Status == "active" {
-			active = append(active, t)
+		if statusSet[t.Status] {
+			filtered = append(filtered, t)
 		}
 	}
-	return active
+	return filtered
 }
 
 // normalizeContent converts HTML content to plain text/markdown.

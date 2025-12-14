@@ -23,6 +23,14 @@ const (
 type Config struct {
 	Filter *FilterConfig `json:"filter,omitempty"`
 	Output *OutputConfig `json:"output,omitempty"`
+	Status *StatusConfig `json:"status,omitempty"`
+}
+
+// StatusConfig controls which thread statuses are included in output.
+type StatusConfig struct {
+	// Include is a list of statuses to include (e.g., "active", "fixed", "closed", "byDesign", "pending", "wontFix").
+	// Empty means include all statuses.
+	Include []string `json:"include,omitempty"`
 }
 
 // FilterConfig defines patterns to strip from PR comments.
@@ -64,6 +72,14 @@ func DefaultFilterConfig() *FilterConfig {
 		CutPatterns:    []string{},
 		ScrubPatterns:  []string{},
 		AuthorPatterns: []string{},
+	}
+}
+
+// DefaultStatusConfig returns the default status config.
+// Empty Include means all statuses are included.
+func DefaultStatusConfig() *StatusConfig {
+	return &StatusConfig{
+		Include: []string{},
 	}
 }
 
@@ -138,6 +154,9 @@ func LoadConfig() (*Config, error) {
 	}
 	if cfg.Output == nil {
 		cfg.Output = DefaultOutputConfig()
+	}
+	if cfg.Status == nil {
+		cfg.Status = DefaultStatusConfig()
 	}
 
 	return &cfg, nil

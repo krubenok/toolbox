@@ -10,8 +10,8 @@ import (
 // Options configures the PR comments fetcher.
 type Options struct {
 	PRURL      string
-	ActiveOnly bool
-	OutputJSON bool // Output JSON instead of toon
+	Statuses   []string // Filter to these statuses (empty = use config default, which may also be empty for all)
+	OutputJSON bool     // Output JSON instead of toon
 	Debug      bool
 	NoFilter   bool // Disable content filtering
 	DebugLog   func(string)
@@ -71,10 +71,13 @@ func Run(opts Options) (*Result, error) {
 		return nil, err
 	}
 
-	// Filter if needed
-	if opts.ActiveOnly {
-		threads = FilterActiveThreads(threads)
+	// Filter by status
+	// If CLI provided statuses, use those; otherwise use config default
+	statuses := opts.Statuses
+	if len(statuses) == 0 && cfg.Status != nil {
+		statuses = cfg.Status.Include
 	}
+	threads = FilterThreadsByStatus(threads, statuses)
 
 	// Simplify threads
 	simplified := SimplifyThreads(threads, filter)
