@@ -225,7 +225,7 @@ func (cf *CompiledFilter) Apply(text string) string {
 	}
 
 	// Clean up extra newlines
-	result = regexp.MustCompile(`\n{3,}`).ReplaceAllString(result, "\n\n")
+	result = reManyNewlines.ReplaceAllString(result, "\n\n")
 
 	return strings.TrimSpace(result)
 }

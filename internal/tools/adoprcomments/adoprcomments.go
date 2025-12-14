@@ -1,7 +1,9 @@
 package adoprcomments
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/kyrubeno/toolbox/internal/auth"
 	toon "github.com/toon-format/toon-go"
@@ -9,6 +11,7 @@ import (
 
 // Options configures the PR comments fetcher.
 type Options struct {
+	Ctx        context.Context
 	PRURL      string
 	Statuses   []string // Filter to these statuses (empty = use config default, which may also be empty for all)
 	OutputJSON bool     // Output JSON instead of toon
@@ -25,6 +28,11 @@ type Result struct {
 
 // Run fetches and processes PR comments from Azure DevOps.
 func Run(opts Options) (*Result, error) {
+	ctx := opts.Ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	// Parse the PR URL
 	parsed, err := ParsePRURL(opts.PRURL)
 	if err != nil {
@@ -44,13 +52,7 @@ func Run(opts Options) (*Result, error) {
 	// Load config
 	cfg, err := LoadConfig()
 	if err != nil {
-		if opts.Debug && opts.DebugLog != nil {
-			opts.DebugLog("Warning: failed to load config: " + err.Error())
-		}
-		cfg = &Config{
-			Filter: DefaultFilterConfig(),
-			Output: DefaultOutputConfig(),
-		}
+		return nil, fmt.Errorf("load config: %w", err)
 	}
 
 	// Compile filter (unless disabled)
@@ -58,15 +60,13 @@ func Run(opts Options) (*Result, error) {
 	if !opts.NoFilter {
 		filter, err = cfg.Filter.Compile()
 		if err != nil {
-			if opts.Debug && opts.DebugLog != nil {
-				opts.DebugLog("Warning: failed to compile filter: " + err.Error())
-			}
+			return nil, fmt.Errorf("compile filter config: %w", err)
 		}
 	}
 
 	// Create client and fetch threads
 	client := NewClient(azAuth, opts.Debug, opts.DebugLog)
-	threads, err := client.FetchThreads(parsed)
+	threads, err := client.FetchThreads(ctx, parsed)
 	if err != nil {
 		return nil, err
 	}

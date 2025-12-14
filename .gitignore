@@ -22,3 +22,6 @@ Thumbs.db
 # Goreleaser
 dist/
 .claude/settings.local.json
+
+# Local caches
+.cache/

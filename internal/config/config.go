@@ -2,28 +2,38 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 )
 
 // Dir returns the toolbox config directory (~/.toolbox).
-func Dir() string {
+func Dir() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return ""
+		return "", fmt.Errorf("resolve home dir: %w", err)
 	}
-	return filepath.Join(home, ".toolbox")
+	return filepath.Join(home, ".toolbox"), nil
 }
 
 // Path returns the full path to a config file within ~/.toolbox.
-func Path(filename string) string {
-	return filepath.Join(Dir(), filename)
+func Path(filename string) (string, error) {
+	dir, err := Dir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, filename), nil
 }
 
 // Load reads and unmarshals a JSON config file from ~/.toolbox.
 // Returns os.ErrNotExist if file doesn't exist.
 func Load(filename string, v any) error {
-	data, err := os.ReadFile(Path(filename))
+	path, err := Path(filename)
+	if err != nil {
+		return err
+	}
+
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
@@ -33,7 +43,10 @@ func Load(filename string, v any) error {
 // Save marshals and writes a JSON config file to ~/.toolbox.
 // Creates the directory if it doesn't exist.
 func Save(filename string, v any) error {
-	dir := Dir()
+	dir, err := Dir()
+	if err != nil {
+		return err
+	}
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return err
 	}
@@ -43,5 +56,9 @@ func Save(filename string, v any) error {
 		return err
 	}
 
-	return os.WriteFile(Path(filename), data, 0644)
+	path, err := Path(filename)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0644)
 }

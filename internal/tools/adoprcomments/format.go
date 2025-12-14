@@ -1,8 +1,22 @@
 package adoprcomments
 
 import (
+	"html"
 	"regexp"
 	"strings"
+)
+
+var (
+	reHTMLTag       = regexp.MustCompile(`(?i)</?[a-z][a-z0-9]*[\s>/]`)
+	reHTMLBr        = regexp.MustCompile(`(?i)<\s*br\s*/?\s*>`)
+	reHTMLCloseP    = regexp.MustCompile(`(?i)</\s*p\s*>`)
+	reHTMLCloseDiv  = regexp.MustCompile(`(?i)</\s*div\s*>`)
+	reHTMLCloseLi   = regexp.MustCompile(`(?i)</\s*li\s*>`)
+	reHTMLCloseTr   = regexp.MustCompile(`(?i)</\s*tr\s*>`)
+	reHTMLCloseTh   = regexp.MustCompile(`(?i)</\s*th\s*>`)
+	reHTMLCloseTd   = regexp.MustCompile(`(?i)</\s*td\s*>`)
+	reHTMLStripTags = regexp.MustCompile(`<[^>]+>`)
+	reManyNewlines  = regexp.MustCompile(`\n{3,}`)
 )
 
 // SimplifiedThread represents a simplified view of a PR thread.
@@ -182,12 +196,15 @@ func normalizeContent(content string) string {
 		return ""
 	}
 
-	// Check if content contains HTML
-	if !strings.Contains(content, "<") {
+	if !looksLikeHTML(content) {
 		return strings.TrimSpace(content)
 	}
 
 	return htmlToMarkdownish(content)
+}
+
+func looksLikeHTML(content string) bool {
+	return reHTMLTag.MatchString(content)
 }
 
 // htmlToMarkdownish converts HTML to a markdown-like format.
@@ -195,19 +212,19 @@ func htmlToMarkdownish(input string) string {
 	result := input
 
 	// Convert block elements to newlines
-	result = regexp.MustCompile(`(?i)<\s*br\s*/?\s*>`).ReplaceAllString(result, "\n")
-	result = regexp.MustCompile(`(?i)</\s*p\s*>`).ReplaceAllString(result, "\n")
-	result = regexp.MustCompile(`(?i)</\s*div\s*>`).ReplaceAllString(result, "\n")
-	result = regexp.MustCompile(`(?i)</\s*li\s*>`).ReplaceAllString(result, "\n- ")
-	result = regexp.MustCompile(`(?i)</\s*tr\s*>`).ReplaceAllString(result, "\n")
-	result = regexp.MustCompile(`(?i)</\s*th\s*>`).ReplaceAllString(result, ": ")
-	result = regexp.MustCompile(`(?i)</\s*td\s*>`).ReplaceAllString(result, " ")
+	result = reHTMLBr.ReplaceAllString(result, "\n")
+	result = reHTMLCloseP.ReplaceAllString(result, "\n")
+	result = reHTMLCloseDiv.ReplaceAllString(result, "\n")
+	result = reHTMLCloseLi.ReplaceAllString(result, "\n- ")
+	result = reHTMLCloseTr.ReplaceAllString(result, "\n")
+	result = reHTMLCloseTh.ReplaceAllString(result, ": ")
+	result = reHTMLCloseTd.ReplaceAllString(result, " ")
 
 	// Strip remaining tags
-	result = regexp.MustCompile(`<[^>]+>`).ReplaceAllString(result, "")
+	result = reHTMLStripTags.ReplaceAllString(result, "")
 
 	// Decode HTML entities
-	result = decodeEntities(result)
+	result = html.UnescapeString(result)
 
 	// Clean up whitespace
 	lines := strings.Split(result, "\n")
@@ -215,24 +232,7 @@ func htmlToMarkdownish(input string) string {
 		lines[i] = strings.TrimRight(line, " \t")
 	}
 	result = strings.Join(lines, "\n")
-	result = regexp.MustCompile(`\n{3,}`).ReplaceAllString(result, "\n\n")
+	result = reManyNewlines.ReplaceAllString(result, "\n\n")
 
 	return strings.TrimSpace(result)
-}
-
-// decodeEntities decodes common HTML entities.
-func decodeEntities(input string) string {
-	replacements := map[string]string{
-		"&lt;":   "<",
-		"&gt;":   ">",
-		"&amp;":  "&",
-		"&quot;": `"`,
-		"&#39;":  "'",
-	}
-
-	result := input
-	for entity, char := range replacements {
-		result = strings.ReplaceAll(result, entity, char)
-	}
-	return result
 }

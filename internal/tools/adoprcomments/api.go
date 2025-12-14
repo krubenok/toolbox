@@ -1,15 +1,38 @@
 package adoprcomments
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/kyrubeno/toolbox/internal/auth"
 )
+
+const defaultHTTPTimeout = 30 * time.Second
+
+// HTTPError represents a non-2xx response from the Azure DevOps API.
+type HTTPError struct {
+	StatusCode int
+	Status     string
+	URL        string
+	Body       string
+}
+
+func (e *HTTPError) Error() string {
+	if e == nil {
+		return "http error"
+	}
+	if e.Body == "" {
+		return fmt.Sprintf("request failed (%s): %s", e.Status, e.URL)
+	}
+	return fmt.Sprintf("request failed (%s): %s: %s", e.Status, e.URL, e.Body)
+}
 
 // Client handles Azure DevOps API requests.
 type Client struct {
@@ -23,19 +46,19 @@ type Client struct {
 func NewClient(auth *auth.Auth, debug bool, debugLog func(string)) *Client {
 	return &Client{
 		auth:       auth,
-		httpClient: &http.Client{},
+		httpClient: &http.Client{Timeout: defaultHTTPTimeout},
 		debug:      debug,
 		debugLog:   debugLog,
 	}
 }
 
 // fetchJSON performs a GET request and decodes the JSON response.
-func (c *Client) fetchJSON(apiURL string, result any) error {
+func (c *Client) fetchJSON(ctx context.Context, apiURL string, result any) error {
 	if c.debug && c.debugLog != nil {
 		c.debugLog(fmt.Sprintf("Fetching: %s", apiURL))
 	}
 
-	req, err := http.NewRequest("GET", apiURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL, nil)
 	if err != nil {
 		return err
 	}
@@ -47,15 +70,16 @@ func (c *Client) fetchJSON(apiURL string, result any) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if closeErr := resp.Body.Close(); closeErr != nil && err == nil {
-			err = closeErr
-		}
-	}()
+	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("request failed (%s): %s", resp.Status, string(body))
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		bodyBytes, _ := io.ReadAll(io.LimitReader(resp.Body, 64*1024))
+		return &HTTPError{
+			StatusCode: resp.StatusCode,
+			Status:     resp.Status,
+			URL:        apiURL,
+			Body:       strings.TrimSpace(string(bodyBytes)),
+		}
 	}
 
 	return json.NewDecoder(resp.Body).Decode(result)
@@ -156,17 +180,18 @@ type RepoInfo struct {
 
 // FetchThreads retrieves PR comment threads from Azure DevOps.
 // It handles 404 errors by looking up the PR to get the repository ID.
-func (c *Client) FetchThreads(pr *ParsedPR) ([]Thread, error) {
+func (c *Client) FetchThreads(ctx context.Context, pr *ParsedPR) ([]Thread, error) {
 	var threadsResp ThreadsResponse
 
 	// Try fetching threads directly
-	err := c.fetchJSON(threadsURL(pr), &threadsResp)
+	err := c.fetchJSON(ctx, threadsURL(pr), &threadsResp)
 	if err == nil {
 		return threadsResp.Value, nil
 	}
 
 	// If not a 404, return the error
-	if !strings.Contains(err.Error(), "404") {
+	var httpErr *HTTPError
+	if !errors.As(err, &httpErr) || httpErr.StatusCode != http.StatusNotFound {
 		return nil, err
 	}
 
@@ -176,7 +201,7 @@ func (c *Client) FetchThreads(pr *ParsedPR) ([]Thread, error) {
 
 	// Fetch PR details to get repository ID
 	var prResp PRResponse
-	if err := c.fetchJSON(prURL(pr), &prResp); err != nil {
+	if err := c.fetchJSON(ctx, prURL(pr), &prResp); err != nil {
 		return nil, err
 	}
 
@@ -185,7 +210,7 @@ func (c *Client) FetchThreads(pr *ParsedPR) ([]Thread, error) {
 	}
 
 	// Retry with repository ID
-	if err := c.fetchJSON(threadsURLByRepoID(pr, prResp.Repository.ID), &threadsResp); err != nil {
+	if err := c.fetchJSON(ctx, threadsURLByRepoID(pr, prResp.Repository.ID), &threadsResp); err != nil {
 		return nil, err
 	}
 

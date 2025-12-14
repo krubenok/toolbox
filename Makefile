@@ -25,7 +25,8 @@ test:
 
 # Run linter (requires: brew install golangci-lint)
 lint:
-	golangci-lint run
+	mkdir -p .cache/gocache .cache/gomod .cache/golangci-lint
+	GOCACHE="$(PWD)/.cache/gocache" GOMODCACHE="$(PWD)/.cache/gomod" GOLANGCI_LINT_CACHE="$(PWD)/.cache/golangci-lint" golangci-lint run
 
 # Format code
 fmt:
@@ -41,7 +42,7 @@ tidy:
 
 # Install locally
 install: build
-	cp bin/toolbox /usr/local/bin/toolbox
+	go install $(LDFLAGS) ./cmd/toolbox
 
 # Release (dry run, requires: brew install goreleaser)
 release-dry:

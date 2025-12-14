@@ -83,6 +83,7 @@ func init() {
 
 func runAdoPRComments(cmd *cobra.Command, args []string) error {
 	opts := adoprcomments.Options{
+		Ctx:        cmd.Context(),
 		PRURL:      args[0],
 		Statuses:   adoPRStatuses,
 		OutputJSON: adoPROutputJSON,
