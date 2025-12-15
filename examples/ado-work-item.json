@@ -1,0 +1,24 @@
+{
+  "output": {
+    "id": "notEmpty",
+    "title": "notEmpty",
+    "type": "notEmpty",
+    "state": "notEmpty",
+    "assignedTo": "notEmpty",
+
+    "description": "always",
+    "discussion": "always",
+    "children": "always",
+    "attachments": "always",
+
+    "commentAuthor": "notEmpty",
+    "commentCreated": "notEmpty",
+    "commentText": "notEmpty",
+
+    "childId": "notEmpty",
+    "childUiUrl": "notEmpty",
+
+    "attachmentName": "notEmpty",
+    "attachmentDownloadUrl": "notEmpty"
+  }
+}

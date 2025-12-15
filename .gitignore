@@ -25,3 +25,5 @@ dist/
 
 # Local caches
 .cache/
+.gocache/
+.gomodcache/

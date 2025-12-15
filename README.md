@@ -39,6 +39,18 @@ toolbox ado-pr-comments <PR_URL> --json
 
 More details: `docs/ado-pr-comments.md`.
 
+### ado-work-item
+
+Fetch and display Azure DevOps work item details (description, discussion/comments, child links, attachments).
+
+```bash
+toolbox ado-work-item <WORK_ITEM_URL>
+toolbox ado-work-item <WORK_ITEM_URL> --max-comments 50
+toolbox ado-work-item <WORK_ITEM_URL> --json
+```
+
+More details: `docs/ado-work-item.md`.
+
 ## Development
 
 ```bash
