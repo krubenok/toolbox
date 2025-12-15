@@ -1,4 +1,4 @@
-.PHONY: build run test clean tidy lint fmt
+.PHONY: build build-mcp run test clean tidy lint fmt
 
 # Build variables
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -9,11 +9,15 @@ LDFLAGS := -ldflags "-X github.com/kyrubeno/toolbox/internal/cli.Version=$(VERSI
                      -X github.com/kyrubeno/toolbox/internal/cli.BuildDate=$(BUILD_DATE)"
 
 # Default target
-all: build
+all: build build-mcp
 
-# Build the binary
+# Build the CLI binary
 build:
 	go build $(LDFLAGS) -o bin/toolbox ./cmd/toolbox
+
+# Build the MCP server binary
+build-mcp:
+	go build -o bin/toolbox-mcp ./cmd/toolbox-mcp
 
 # Run the CLI
 run:
@@ -41,8 +45,9 @@ tidy:
 	go mod tidy
 
 # Install locally
-install: build
+install: build build-mcp
 	go install $(LDFLAGS) ./cmd/toolbox
+	go install ./cmd/toolbox-mcp
 
 # Release (dry run, requires: brew install goreleaser)
 release-dry:
