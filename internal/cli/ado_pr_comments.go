@@ -99,6 +99,9 @@ func runAdoPRComments(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if !adoPROutputJSON && result.Summary != "" {
+		fmt.Println(result.Summary)
+	}
 	fmt.Println(result.Output)
 	return nil
 }
