@@ -3,7 +3,7 @@ package mcp
 import (
 	"context"
 
-	"github.com/kyrubeno/toolbox/internal/tools/adoprcomments"
+	"github.com/krubenok/toolbox/internal/tools/adoprcomments"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 

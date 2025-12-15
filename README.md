@@ -12,13 +12,13 @@
 
 // TODO
 ```bash
-brew install kyrubeno/tap/toolbox
+brew install krubenok/tap/toolbox
 ```
 
 ### Go
 
 ```bash
-go install github.com/kyrubeno/toolbox/cmd/toolbox@latest
+go install github.com/krubenok/toolbox/cmd/toolbox@latest
 ```
 
 ## Usage

@@ -19,9 +19,9 @@ builds:
       - arm64
     ldflags:
       - -s -w
-      - -X github.com/kyrubeno/toolbox/internal/cli.Version={{.Version}}
-      - -X github.com/kyrubeno/toolbox/internal/cli.Commit={{.Commit}}
-      - -X github.com/kyrubeno/toolbox/internal/cli.BuildDate={{.Date}}
+      - -X github.com/krubenok/toolbox/internal/cli.Version={{.Version}}
+      - -X github.com/krubenok/toolbox/internal/cli.Commit={{.Commit}}
+      - -X github.com/krubenok/toolbox/internal/cli.BuildDate={{.Date}}
 
 archives:
   - id: default
@@ -47,10 +47,10 @@ changelog:
 brews:
   - name: toolbox
     repository:
-      owner: kyrubeno
+      owner: krubenok
       name: homebrew-tap
     directory: Formula
-    homepage: "https://github.com/kyrubeno/toolbox"
+    homepage: "https://github.com/krubenok/toolbox"
     description: "AI-assisted software development tools"
     license: "MIT"
     test: |

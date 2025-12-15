@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/kyrubeno/toolbox/internal/cli"
+	"github.com/krubenok/toolbox/internal/cli"
 )
 
 func main() {

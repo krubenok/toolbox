@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/kyrubeno/toolbox/internal/config"
+	"github.com/krubenok/toolbox/internal/config"
 )
 
 const configFile = "ado-pr-comments.json"

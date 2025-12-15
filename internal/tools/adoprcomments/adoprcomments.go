@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/kyrubeno/toolbox/internal/auth"
+	"github.com/krubenok/toolbox/internal/auth"
 	toon "github.com/toon-format/toon-go"
 )
 

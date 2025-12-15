@@ -1,4 +1,4 @@
-module github.com/kyrubeno/toolbox
+module github.com/krubenok/toolbox
 
 go 1.23.0
 

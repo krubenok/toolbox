@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kyrubeno/toolbox/internal/auth"
+	"github.com/krubenok/toolbox/internal/auth"
 )
 
 const defaultHTTPTimeout = 30 * time.Second

@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/kyrubeno/toolbox/internal/tools/adoprcomments"
+	"github.com/krubenok/toolbox/internal/tools/adoprcomments"
 )
 
 var adoPRCommentsCmd = &cobra.Command{

@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/signal"
 
-	toolboxmcp "github.com/kyrubeno/toolbox/internal/mcp"
+	toolboxmcp "github.com/krubenok/toolbox/internal/mcp"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
