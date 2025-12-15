@@ -23,6 +23,7 @@ type Options struct {
 // Result contains the output from fetching PR comments.
 type Result struct {
 	Threads []SimplifiedThread
+	Summary string // Optional informational summary (not included in JSON output)
 	Output  string // Formatted output (toon or JSON)
 }
 
@@ -73,14 +74,17 @@ func Run(opts Options) (*Result, error) {
 
 	// Filter by status
 	// If CLI provided statuses, use those; otherwise use config default
+	allThreads := threads
+	allStatusCounts := CountThreadsByStatus(allThreads)
 	statuses := opts.Statuses
 	if len(statuses) == 0 && cfg.Status != nil {
 		statuses = cfg.Status.Include
 	}
-	threads = FilterThreadsByStatus(threads, statuses)
+	filteredThreads := FilterThreadsByStatus(allThreads, statuses)
+	summary := EmptyStatusFilterSummary(statuses, allStatusCounts, len(filteredThreads))
 
 	// Simplify threads
-	simplified := SimplifyThreads(threads, filter)
+	simplified := SimplifyThreads(filteredThreads, filter)
 
 	// Serialize output
 	var output string
@@ -112,6 +116,7 @@ func Run(opts Options) (*Result, error) {
 
 	return &Result{
 		Threads: simplified,
+		Summary: summary,
 		Output:  output,
 	}, nil
 }

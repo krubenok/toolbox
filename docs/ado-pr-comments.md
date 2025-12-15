@@ -137,6 +137,7 @@ You can configure default status filtering to only include specific thread statu
 - **Empty `include` array** (default): All statuses are included
 - **Non-empty `include` array**: Only threads with matching statuses are included
 - **`--status` flag**: Overrides config for that invocation
+- **Helpful empty output** (TOON only): If a status filter matches 0 threads but the PR has threads in other statuses, the tool prints a 1-line status breakdown before the empty thread list.
 
 #### Examples
 

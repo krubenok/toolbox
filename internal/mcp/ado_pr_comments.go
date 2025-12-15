@@ -56,9 +56,13 @@ func handleAdoPRComments(ctx context.Context, req *mcp.CallToolRequest, input Ad
 		}, nil, nil
 	}
 
+	contents := make([]mcp.Content, 0, 2)
+	if input.Format != "json" && result.Summary != "" {
+		contents = append(contents, &mcp.TextContent{Text: result.Summary})
+	}
+	contents = append(contents, &mcp.TextContent{Text: result.Output})
+
 	return &mcp.CallToolResult{
-		Content: []mcp.Content{
-			&mcp.TextContent{Text: result.Output},
-		},
+		Content: contents,
 	}, nil, nil
 }
